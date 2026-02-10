@@ -3,85 +3,131 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Gem Rush Arena — 1v1 Online</title>
-    <meta name="description"
-        content="A real-time 1v1 multiplayer arena game. Collect gems, dash into opponents, and compete for the highest score!">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сөз Сайыс — Ultimate Translation Battle</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <link rel="stylesheet" href="css.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Noto+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link src="css.css" rel="stylesheet">
+    <!-- PeerJS: Try local first, fallback to CDN -->
+    <script src="peerjs.min.js"></script>
+    <script>
+        if (!window.Peer) {
+            document.write('<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');
+        }
+    </script>
+    <style>
+
+    </style>
 </head>
 
-<body>
+<body class="debug-mode"> <!-- Always debug mode for now -->
 
-    <!-- Background animation canvas -->
-    <canvas id="bg-canvas"></canvas>
+    <!-- BACKGROUND -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div id="debug-log"></div>
 
-    <!-- ───── LOBBY ───── -->
-    <div id="lobby">
-        <div class="logo">⚔️ Gem Rush Arena</div>
-        <div class="logo-sub">Real-time 1v1 — Play across devices</div>
-
+    <!-- LOBBY SCREEN -->
+    <div id="screen-lobby" class="screen active">
         <div class="card">
-            <h2>🎮 Enter the Arena</h2>
-            <label for="player-name">Your Name</label>
-            <input type="text" id="player-name" placeholder="Player" maxlength="16">
+            <h1>Сөз Сайыс</h1>
+            <h2>Translation Battle</h2>
 
-            <button class="btn btn-primary" id="btn-create">🏰 Create Room</button>
-
-            <div id="room-code-display">
-                <label>Share this code</label>
-                <div class="code" id="room-code-text"></div>
-                <p class="status-msg" id="host-status">Waiting for opponent…</p>
+            <div class="input-group">
+                <label>Your Name</label>
+                <input type="text" id="inp-name" placeholder="Enter your name" maxlength="10">
             </div>
 
-            <div class="or-divider">or</div>
-
-            <button class="btn btn-secondary" id="btn-join-toggle">🔗 Join a Room</button>
-            <div id="join-section">
-                <label for="join-code">Room Code</label>
-                <input type="text" id="join-code" placeholder="Enter code" maxlength="8">
-                <button class="btn btn-primary" id="btn-join">⚡ Join</button>
+            <button class="btn btn-primary" onclick="Game.createRoom()">
+                <span>🚀</span> Create Room
+            </button>
+            <button class="btn btn-secondary" onclick="UI.showJoin()">
+                <span>🔗</span> Join Room
+            </button>
+            <div class="row" style="margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
+                <button class="btn btn-accent" onclick="Game.startSinglePlayer()">
+                    <span>🤖</span> Single Player (Offline)
+                </button>
             </div>
-
-            <p class="status-msg" id="lobby-status"></p>
+            <div id="status-lobby" class="status"></div>
         </div>
     </div>
 
-    <!-- ───── GAME VIEW ───── -->
-    <div id="game-ui">
-        <canvas id="game-canvas"></canvas>
-        <div class="hud" id="hud">
-            <div class="hud-player">
-                <div class="hud-dot" id="hud-dot-me" style="background:#6c8cff;box-shadow:0 0 8px #6c8cff"></div>
-                <span id="hud-name-me">You</span>: <span id="hud-score-me">0</span>
+    <!-- JOIN SCREEN -->
+    <div id="screen-join" class="screen">
+        <div class="card">
+            <h1>Join Room</h1>
+            <div class="input-group">
+                <label>Room Code</label>
+                <input type="text" id="inp-code" placeholder="ABCDE"
+                    style="text-transform:uppercase; text-align:center; font-size:1.5rem; letter-spacing:4px;">
             </div>
-            <span class="hud-vs">VS</span>
-            <div class="hud-player">
-                <div class="hud-dot" id="hud-dot-opp" style="background:#ff6b8a;box-shadow:0 0 8px #ff6b8a"></div>
-                <span id="hud-name-opp">Opponent</span>: <span id="hud-score-opp">0</span>
+            <div class="row">
+                <button class="btn btn-secondary" onclick="UI.showLobby()">Back</button>
+                <button class="btn btn-primary" onclick="Game.joinRoom()">Join Game</button>
             </div>
+            <div id="status-join" class="status"></div>
         </div>
-
-        <!-- Mobile controls -->
-        <div id="joystick-zone">
-            <div class="joystick-base" id="joy-base"></div>
-            <div class="joystick-stick" id="joy-stick"></div>
-        </div>
-        <button id="dash-btn">DASH</button>
-
-        <div class="disconnect-banner" id="disconnect-banner">⚠️ Opponent disconnected</div>
     </div>
 
-    <!-- ───── WIN MODAL ───── -->
-    <div id="win-modal">
-        <div class="win-card">
-            <h1 id="win-title">🏆 You Win!</h1>
-            <p id="win-subtitle">You collected 10 gems first!</p>
-            <button class="btn btn-primary" id="btn-play-again" style="width:auto">🔄 Play Again</button>
+    <!-- HOST WAITING SCREEN -->
+    <div id="screen-host" class="screen">
+        <div class="card">
+            <h1>Room Ready!</h1>
+            <h2>Share this code:</h2>
+            <div id="host-code" class="room-code">...</div>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Waiting for opponent...</p>
+            <button class="btn btn-secondary" onclick="location.reload()" style="margin-top:20px;">Cancel</button>
         </div>
     </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="screen">
+        <div class="hud">
+            <div class="score-card" style="text-align:left">
+                <div class="score-val" id="score-me" style="color:var(--primary)">0</div>
+                <div class="score-label">You</div>
+            </div>
+            <div class="timer" id="timer">90</div>
+            <div class="score-card" style="text-align:right">
+                <div class="score-val" id="score-opp" style="color:var(--danger)">0</div>
+                <div class="score-label" id="label-opp">Enemy</div>
+            </div>
+        </div>
+
+        <div class="q-container">
+            <div class="q-context" id="q-ctx">Kazakh → English</div>
+            <div class="q-text" id="q-text">Loading...</div>
+            <div class="ans-wrapper">
+                <input type="text" class="ans-input" id="inp-ans" placeholder="Type translation..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="screen-results" class="screen">
+        <div class="card">
+            <div id="res-msg" class="win-msg">Game Over</div>
+            <table class="res-table">
+                <tr>
+                    <td>Your Score</td>
+                    <td id="res-me">0</td>
+                </tr>
+                <tr>
+                    <td>Opponent Score</td>
+                    <td id="res-opp">0</td>
+                </tr>
+            </table>
+            <button class="btn btn-primary" onclick="location.reload()">Play Again</button>
+        </div>
+    </div>
+
+    <!-- FEEDBACK TOASTS -->
+    <div id="toast-correct" class="toast" style="color:var(--success)">+1</div>
+    <div id="toast-wrong" class="toast" style="color:var(--danger)">✗</div>
+
 
     <script src="script.js"></script>
 </body>

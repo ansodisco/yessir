@@ -1,1064 +1,1034 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Gem Rush Arena — 1v1 Online</title>
-<meta name="description" content="A real-time 1v1 multiplayer arena game. Collect gems, dash into opponents, and compete for the highest score!">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Сөз Сайыс — Kazakh↔English Translation Battle</title>
+    <meta name="description"
+        content="1v1 online translation battle — Kazakh to English and back. Two modes: Speed Rush and Round Battle!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Noto+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  :root {
-    --bg-dark: #0a0e1a;
-    --bg-card: rgba(15, 20, 40, 0.85);
-    --border-glow: rgba(100, 140, 255, 0.25);
-    --accent: #6c8cff;
-    --accent-bright: #8eaaff;
-    --gem-gold: #ffd666;
-    --danger: #ff6b8a;
-    --success: #5cffb1;
-    --text: #e0e6f0;
-    --text-dim: #7a8ba8;
-    --radius: 16px;
-    --font: 'Outfit', sans-serif;
-  }
+        :root {
+            --bg: #080c18;
+            --bg-card: rgba(12, 18, 38, 0.92);
+            --bg-card-light: rgba(20, 30, 60, 0.7);
+            --border: rgba(80, 120, 255, 0.18);
+            --border-bright: rgba(100, 160, 255, 0.35);
+            --accent: #5b8cff;
+            --accent-bright: #7eaaff;
+            --accent2: #a97bff;
+            --gold: #ffd666;
+            --gold-dim: rgba(255, 214, 102, 0.15);
+            --green: #4ce0a5;
+            --green-dim: rgba(76, 224, 165, 0.12);
+            --red: #ff5e7d;
+            --red-dim: rgba(255, 94, 125, 0.12);
+            --text: #e8ecf4;
+            --text-dim: #6b7c9a;
+            --text-muted: #3d4e6a;
+            --r: 14px;
+            --font: 'Outfit', 'Noto Sans', sans-serif;
+        }
 
-  body {
-    font-family: var(--font);
-    background: var(--bg-dark);
-    color: var(--text);
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-  }
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
 
-  /* ───── Animated background ───── */
-  #bg-canvas {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-  }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+        }
 
-  /* ───── Lobby ───── */
-  #lobby {
-    position: fixed; inset: 0; z-index: 10;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 24px;
-  }
+        /* ─── Animated Background ─── */
+        #bg-fx {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 30%, rgba(91, 140, 255, 0.06), transparent),
+                radial-gradient(ellipse 60% 50% at 80% 70%, rgba(169, 123, 255, 0.05), transparent),
+                var(--bg);
+        }
 
-  .logo {
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--accent-bright), var(--gem-gold));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 60px rgba(108,140,255,0.3);
-    text-align: center;
-    letter-spacing: -1px;
-  }
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: orbFloat 20s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  .logo-sub {
-    font-size: clamp(0.8rem, 2vw, 1rem);
-    color: var(--text-dim);
-    text-align: center;
-    margin-top: -12px;
-  }
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            left: -80px;
+            background: rgba(91, 140, 255, 0.08);
+        }
 
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-glow);
-    border-radius: var(--radius);
-    padding: 32px;
-    width: min(420px, 90vw);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-  }
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            bottom: -80px;
+            right: -60px;
+            background: rgba(169, 123, 255, 0.07);
+            animation-delay: -8s;
+        }
 
-  .card h2 {
-    font-size: 1.1rem; font-weight: 700;
-    margin-bottom: 16px; color: var(--accent-bright);
-  }
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            top: 40%;
+            left: 50%;
+            background: rgba(255, 214, 102, 0.04);
+            animation-delay: -14s;
+        }
 
-  label {
-    display: block; font-size: 0.8rem; font-weight: 600;
-    color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+        @keyframes orbFloat {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
 
-  input[type="text"] {
-    width: 100%; padding: 12px 16px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px; color: var(--text);
-    font-family: var(--font); font-size: 1rem;
-    outline: none; transition: border-color 0.2s;
-    margin-bottom: 16px;
-  }
-  input[type="text"]:focus { border-color: var(--accent); }
-  input[type="text"]::placeholder { color: rgba(255,255,255,0.2); }
+            50% {
+                transform: translate(30px, -20px) scale(1.1);
+            }
 
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 12px 28px;
-    border: none; border-radius: 10px;
-    font-family: var(--font); font-size: 1rem; font-weight: 700;
-    cursor: pointer; transition: all 0.2s; width: 100%;
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn-primary {
-    background: linear-gradient(135deg, #6c8cff, #a77bff);
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(108,140,255,0.35);
-  }
-  .btn-primary:hover { box-shadow: 0 4px 30px rgba(108,140,255,0.55); }
-  .btn-secondary {
-    background: rgba(255,255,255,0.06);
-    color: var(--accent-bright);
-    border: 1px solid var(--border-glow);
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+            100% {
+                transform: translate(-20px, 15px) scale(0.95);
+            }
+        }
 
-  .or-divider {
-    display: flex; align-items: center; gap: 12px;
-    margin: 20px 0; color: var(--text-dim); font-size: 0.8rem;
-  }
-  .or-divider::before, .or-divider::after {
-    content: ''; flex: 1; height: 1px;
-    background: rgba(255,255,255,0.08);
-  }
+        /* ─── Screens ─── */
+        .screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            overflow-y: auto;
+        }
 
-  #room-code-display {
-    display: none;
-    text-align: center; margin-top: 16px;
-  }
-  #room-code-display .code {
-    font-size: 2rem; font-weight: 900;
-    letter-spacing: 6px; color: var(--gem-gold);
-    text-shadow: 0 0 20px rgba(255,214,102,0.4);
-  }
+        .screen.active {
+            display: flex;
+        }
 
-  #join-section { display: none; margin-top: 4px; }
+        .screen-center {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 24px;
+        }
 
-  .status-msg {
-    text-align: center; font-size: 0.85rem;
-    color: var(--text-dim); margin-top: 12px;
-    min-height: 20px;
-  }
+        /* ─── Typography ─── */
+        .logo {
+            font-size: clamp(2rem, 5.5vw, 3.2rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-bright), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            text-align: center;
+            line-height: 1.15;
+        }
 
-  /* ───── Game UI overlay ───── */
-  #game-ui {
-    display: none;
-    position: fixed; inset: 0; z-index: 10;
-  }
-  #game-canvas {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-  }
+        .logo-kz {
+            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            color: var(--text-dim);
+            text-align: center;
+        }
 
-  .hud {
-    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-    z-index: 20;
-    display: flex; gap: 24px; align-items: center;
-    background: var(--bg-card);
-    border: 1px solid var(--border-glow);
-    border-radius: 14px; padding: 10px 28px;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-    font-weight: 700;
-  }
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--accent-bright);
+            margin-bottom: 14px;
+        }
 
-  .hud-player {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.95rem;
-  }
-  .hud-dot {
-    width: 12px; height: 12px; border-radius: 50%;
-  }
-  .hud-vs { color: var(--text-dim); font-size: 0.8rem; }
+        /* ─── Card ─── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 28px 30px;
+            width: min(460px, 92vw);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 6px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
 
-  /* ───── Win modal ───── */
-  #win-modal {
-    display: none; position: fixed; inset: 0; z-index: 50;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-    align-items: center; justify-content: center;
-  }
-  #win-modal.show { display: flex; }
-  .win-card {
-    background: var(--bg-card); border: 1px solid var(--border-glow);
-    border-radius: var(--radius); padding: 40px 48px;
-    text-align: center; backdrop-filter: blur(20px);
-    box-shadow: 0 8px 60px rgba(0,0,0,0.6);
-    animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-  }
-  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .win-card h1 { font-size: 2rem; margin-bottom: 8px; }
-  .win-card p { color: var(--text-dim); margin-bottom: 24px; }
+        /* ─── Inputs ─── */
+        label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
 
-  /* ───── Mobile joystick ───── */
-  #joystick-zone {
-    position: fixed; bottom: 0; left: 0;
-    width: 50%; height: 40%;
-    z-index: 30;
-    touch-action: none;
-  }
-  #dash-btn {
-    position: fixed; bottom: 60px; right: 40px;
-    z-index: 30;
-    width: 80px; height: 80px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--danger), #ff4070);
-    border: 3px solid rgba(255,255,255,0.2);
-    color: #fff; font-family: var(--font);
-    font-weight: 900; font-size: 0.75rem;
-    text-transform: uppercase; cursor: pointer;
-    box-shadow: 0 4px 24px rgba(255,107,138,0.4);
-    display: none; touch-action: none;
-  }
-  .joystick-base {
-    position: absolute;
-    width: 120px; height: 120px; border-radius: 50%;
-    background: rgba(255,255,255,0.06);
-    border: 2px solid rgba(255,255,255,0.1);
-    display: none; pointer-events: none;
-  }
-  .joystick-stick {
-    position: absolute;
-    width: 50px; height: 50px; border-radius: 50%;
-    background: radial-gradient(circle, var(--accent-bright), var(--accent));
-    box-shadow: 0 0 16px rgba(108,140,255,0.5);
-    display: none; pointer-events: none;
-  }
+        input[type="text"] {
+            width: 100%;
+            padding: 11px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-  /* ───── Disconnected banner ───── */
-  .disconnect-banner {
-    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-    z-index: 40; padding: 10px 24px;
-    background: rgba(255,60,60,0.2); border: 1px solid rgba(255,60,60,0.4);
-    border-radius: 10px; color: var(--danger);
-    font-weight: 600; font-size: 0.9rem;
-    display: none;
-  }
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
 
-  @media (min-width: 769px) {
-    #joystick-zone, #dash-btn { display: none !important; }
-  }
-</style>
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        /* ─── Buttons ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s;
+            width: 100%;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 3px 18px rgba(91, 140, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 3px 28px rgba(91, 140, 255, 0.5);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #ffc940, #ff9f1a);
+            color: #1a1000;
+            box-shadow: 0 3px 18px rgba(255, 200, 64, 0.25);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--accent-bright);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-sm {
+            padding: 9px 18px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .or-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin: 16px 0;
+        }
+
+        .or-line::before,
+        .or-line::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ─── Room Code ─── */
+        .room-code-box {
+            text-align: center;
+            margin: 16px 0 6px;
+        }
+
+        .room-code-box .code {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: var(--gold);
+            text-shadow: 0 0 24px rgba(255, 214, 102, 0.3);
+        }
+
+        .status-msg {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            min-height: 18px;
+            margin-top: 8px;
+        }
+
+        /* ─── Mode Select ─── */
+        .mode-cards {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mode-card {
+            flex: 1;
+            padding: 16px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .mode-card:hover {
+            border-color: var(--accent);
+            background: rgba(91, 140, 255, 0.06);
+        }
+
+        .mode-card.selected {
+            border-color: var(--accent-bright);
+            background: rgba(91, 140, 255, 0.1);
+            box-shadow: 0 0 20px rgba(91, 140, 255, 0.15);
+        }
+
+        .mode-card .mode-icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+
+        .mode-card .mode-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+
+        .mode-card .mode-desc {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            line-height: 1.35;
+        }
+
+        /* ─── GAME Screen ─── */
+        #screen-game {
+            flex-direction: column;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            z-index: 5;
+            flex-shrink: 0;
+        }
+
+        .game-scores {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .score-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .score-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .score-val {
+            font-size: 1.3rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .vs-text {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .timer-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 1.1rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-block.urgent {
+            color: var(--red);
+            border-color: rgba(255, 94, 125, 0.3);
+            background: var(--red-dim);
+        }
+
+        .game-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 18px;
+            position: relative;
+        }
+
+        /* ─── Round Info ─── */
+        .round-badge {
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        /* ─── Question Card ─── */
+        .question-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            border-radius: 16px;
+            padding: 28px 36px;
+            width: min(560px, 92vw);
+            text-align: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--gold));
+        }
+
+        .q-direction {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            background: rgba(91, 140, 255, 0.1);
+            border: 1px solid rgba(91, 140, 255, 0.15);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-bright);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .q-word {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+
+        .q-hint {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 18px;
+            font-style: italic;
+        }
+
+        .q-type {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .q-type-word {
+            background: rgba(91, 140, 255, 0.12);
+            color: var(--accent-bright);
+        }
+
+        .q-type-phrase {
+            background: rgba(169, 123, 255, 0.12);
+            color: var(--accent2);
+        }
+
+        .q-type-proverb {
+            background: var(--gold-dim);
+            color: var(--gold);
+        }
+
+        .answer-input-wrap {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .answer-input-wrap input {
+            flex: 1;
+            padding: 13px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-family: var(--font);
+            font-size: 1.05rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .answer-input-wrap input:focus {
+            border-color: var(--accent);
+        }
+
+        .answer-input-wrap input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .answer-input-wrap .btn {
+            width: auto;
+            flex-shrink: 0;
+        }
+
+        /* ─── Feedback flash ─── */
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+            pointer-events: none;
+            font-size: 2.5rem;
+            font-weight: 900;
+            animation: feedbackPop 0.8s ease-out forwards;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes feedbackPop {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+
+            30% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -80%) scale(1);
+            }
+        }
+
+        .feedback.correct {
+            color: var(--green);
+        }
+
+        .feedback.wrong {
+            color: var(--red);
+        }
+
+        .feedback.opp-scored {
+            color: var(--gold);
+        }
+
+        /* ─── Opponent status line ─── */
+        .opp-status {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 22px;
+        }
+
+        .opp-status .dot-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gold);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ─── Results Screen ─── */
+        .results-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
+            border-radius: 16px;
+            padding: 36px 40px;
+            width: min(480px, 92vw);
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 50px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+        }
+
+        .results-card h1 {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+
+        .results-card .subtitle {
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 0.9rem;
+        }
+
+        .results-table th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-table td {
+            padding: 10px 8px;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .winner-row {
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* ─── Disconnect ─── */
+        .disconnect-bar {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            padding: 8px 22px;
+            border-radius: 10px;
+            background: var(--red-dim);
+            border: 1px solid rgba(255, 94, 125, 0.3);
+            color: var(--red);
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 500px) {
+            .card {
+                padding: 22px 18px;
+            }
+
+            .question-card {
+                padding: 20px 18px;
+            }
+
+            .mode-cards {
+                flex-direction: column;
+            }
+
+            .game-header {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: center;
+            }
+
+            .answer-input-wrap {
+                flex-direction: column;
+            }
+
+            .answer-input-wrap .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- Background animation canvas -->
-<canvas id="bg-canvas"></canvas>
-
-<!-- ───── LOBBY ───── -->
-<div id="lobby">
-  <div class="logo">⚔️ Gem Rush Arena</div>
-  <div class="logo-sub">Real-time 1v1 — Play across devices</div>
-
-  <div class="card">
-    <h2>🎮 Enter the Arena</h2>
-    <label for="player-name">Your Name</label>
-    <input type="text" id="player-name" placeholder="Player" maxlength="16">
-
-    <button class="btn btn-primary" id="btn-create">🏰 Create Room</button>
-
-    <div id="room-code-display">
-      <label>Share this code</label>
-      <div class="code" id="room-code-text"></div>
-      <p class="status-msg" id="host-status">Waiting for opponent…</p>
+    <div id="bg-fx">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
 
-    <div class="or-divider">or</div>
+    <!-- ═══════════ LOBBY ═══════════ -->
+    <div id="screen-lobby" class="screen screen-center active">
+        <div class="logo">📖 Сөз Сайыс</div>
+        <div class="logo-kz">Kazakh ↔ English — Translation Battle</div>
 
-    <button class="btn btn-secondary" id="btn-join-toggle">🔗 Join a Room</button>
-    <div id="join-section">
-      <label for="join-code">Room Code</label>
-      <input type="text" id="join-code" placeholder="Enter code" maxlength="8">
-      <button class="btn btn-primary" id="btn-join">⚡ Join</button>
+        <div class="card">
+            <div class="section-title">🎮 Battle Setup</div>
+
+            <div class="input-group">
+                <label for="inp-name">Your Name</label>
+                <input type="text" id="inp-name" placeholder="Атыңыз / Your name" maxlength="16">
+            </div>
+
+            <div class="section-title" style="margin-top:18px; font-size:0.85rem;">Choose Mode</div>
+            <div class="mode-cards">
+                <div class="mode-card selected" data-mode="speed" id="mc-speed">
+                    <div class="mode-icon">⏱️</div>
+                    <div class="mode-name">Speed Rush</div>
+                    <div class="mode-desc">90 seconds — translate as many as you can!</div>
+                </div>
+                <div class="mode-card" data-mode="rounds" id="mc-rounds">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-name">Round Battle</div>
+                    <div class="mode-desc">10 rounds — faster answer = more points</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-create">🏰 Create Room</button>
+
+            <div id="room-code-area" style="display:none">
+                <div class="room-code-box">
+                    <label>Share this code with your opponent</label>
+                    <div class="code" id="room-code-val"></div>
+                </div>
+                <p class="status-msg" id="host-wait">Waiting for opponent…</p>
+            </div>
+
+            <div class="or-line">or</div>
+
+            <button class="btn btn-ghost" id="btn-show-join">🔗 Join a Room</button>
+            <div id="join-area" style="display:none">
+                <div class="input-group" style="margin-top:12px">
+                    <label for="inp-code">Room Code</label>
+                    <input type="text" id="inp-code" placeholder="Enter 5-letter code" maxlength="8"
+                        style="text-transform:uppercase; letter-spacing:3px; text-align:center; font-weight:700;">
+                </div>
+                <button class="btn btn-gold" id="btn-join">⚡ Join</button>
+            </div>
+
+            <p class="status-msg" id="lobby-status"></p>
+        </div>
     </div>
 
-    <p class="status-msg" id="lobby-status"></p>
-  </div>
-</div>
+    <!-- ═══════════ GAME ═══════════ -->
+    <div id="screen-game" class="screen">
+        <!-- Header -->
+        <div class="game-header">
+            <div class="game-scores">
+                <div class="score-block">
+                    <div class="score-dot" id="dot-me"
+                        style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></div>
+                    <span id="name-me">You</span>
+                    <span class="score-val" id="score-me">0</span>
+                </div>
+                <span class="vs-text">VS</span>
+                <div class="score-block">
+                    <div class="score-dot" id="dot-opp" style="background:var(--red);box-shadow:0 0 6px var(--red)">
+                    </div>
+                    <span id="name-opp">Opponent</span>
+                    <span class="score-val" id="score-opp">0</span>
+                </div>
+            </div>
+            <div class="timer-block" id="timer-display">
+                <span>⏱️</span> <span id="timer-val">1:30</span>
+            </div>
+        </div>
 
-<!-- ───── GAME VIEW ───── -->
-<div id="game-ui">
-  <canvas id="game-canvas"></canvas>
-  <div class="hud" id="hud">
-    <div class="hud-player">
-      <div class="hud-dot" id="hud-dot-me" style="background:#6c8cff;box-shadow:0 0 8px #6c8cff"></div>
-      <span id="hud-name-me">You</span>: <span id="hud-score-me">0</span>
+        <!-- Body -->
+        <div class="game-body">
+            <div class="round-badge" id="round-badge">Speed Rush — Translate as many as you can!</div>
+
+            <div class="question-card" id="q-card">
+                <div class="q-type q-type-word" id="q-type">WORD</div>
+                <div class="q-direction" id="q-dir">🇰🇿 Kazakh → English 🇬🇧</div>
+                <div class="q-word" id="q-word">Мысық</div>
+                <div class="q-hint" id="q-hint"></div>
+                <div class="answer-input-wrap">
+                    <input type="text" id="inp-answer" placeholder="Type translation…" autocomplete="off"
+                        spellcheck="false">
+                    <button class="btn btn-primary btn-sm" id="btn-submit">→</button>
+                </div>
+            </div>
+
+            <div class="opp-status" id="opp-status"></div>
+        </div>
     </div>
-    <span class="hud-vs">VS</span>
-    <div class="hud-player">
-      <div class="hud-dot" id="hud-dot-opp" style="background:#ff6b8a;box-shadow:0 0 8px #ff6b8a"></div>
-      <span id="hud-name-opp">Opponent</span>: <span id="hud-score-opp">0</span>
+
+    <!-- ═══════════ RESULTS ═══════════ -->
+    <div id="screen-results" class="screen screen-center">
+        <div class="results-card">
+            <h1 id="res-title">🏆 You Win!</h1>
+            <p class="subtitle" id="res-subtitle">You scored higher!</p>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Correct</th>
+                    </tr>
+                </thead>
+                <tbody id="res-tbody"></tbody>
+            </table>
+            <button class="btn btn-primary" id="btn-again" style="margin-top:8px">🔄 Play Again</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Mobile controls -->
-  <div id="joystick-zone">
-    <div class="joystick-base" id="joy-base"></div>
-    <div class="joystick-stick" id="joy-stick"></div>
-  </div>
-  <button id="dash-btn">DASH</button>
-
-  <div class="disconnect-banner" id="disconnect-banner">⚠️ Opponent disconnected</div>
-</div>
-
-<!-- ───── WIN MODAL ───── -->
-<div id="win-modal">
-  <div class="win-card">
-    <h1 id="win-title">🏆 You Win!</h1>
-    <p id="win-subtitle">You collected 10 gems first!</p>
-    <button class="btn btn-primary" id="btn-play-again" style="width:auto">🔄 Play Again</button>
-  </div>
-</div>
-
-<script>
-// ═══════════════════════════════════════════════
-// BACKGROUND ANIMATION
-// ═══════════════════════════════════════════════
-(function initBg() {
-  const c = document.getElementById('bg-canvas');
-  const ctx = c.getContext('2d');
-  let W, H;
-  const stars = [];
-  function resize() {
-    W = c.width = innerWidth;
-    H = c.height = innerHeight;
-  }
-  resize();
-  addEventListener('resize', resize);
-  for (let i = 0; i < 120; i++) {
-    stars.push({ x: Math.random()*2000-200, y: Math.random()*2000-200,
-      r: Math.random()*1.5+0.3, speed: Math.random()*0.3+0.05,
-      alpha: Math.random()*0.6+0.2 });
-  }
-  function drawBg() {
-    ctx.fillStyle = '#0a0e1a';
-    ctx.fillRect(0, 0, W, H);
-    for (const s of stars) {
-      s.y += s.speed;
-      if (s.y > H+10) { s.y = -10; s.x = Math.random()*W; }
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(180,200,255,${s.alpha})`;
-      ctx.fill();
-    }
-    requestAnimationFrame(drawBg);
-  }
-  drawBg();
-})();
-
-// ═══════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════
-const WIN_SCORE = 10;
-const PLAYER_RADIUS = 18;
-const GEM_RADIUS = 10;
-const PLAYER_SPEED = 4;
-const DASH_SPEED = 14;
-const DASH_DURATION = 150; // ms
-const DASH_COOLDOWN = 1500; // ms
-const MAX_GEMS = 6;
-const ARENA_W = 1200;
-const ARENA_H = 800;
-const SYNC_RATE = 50; // ms between state syncs
-
-const COLORS = {
-  host: { body: '#6c8cff', glow: 'rgba(108,140,255,0.5)', trail: 'rgba(108,140,255,0.25)' },
-  guest: { body: '#ff6b8a', glow: 'rgba(255,107,138,0.5)', trail: 'rgba(255,107,138,0.25)' }
-};
-
-// ═══════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════
-let isHost = false;
-let peer = null;
-let conn = null;
-let myName = 'Player';
-let oppName = 'Opponent';
-
-let gameRunning = false;
-let lastTime = 0;
-
-// Player states
-let me = { x: 200, y: 400, vx: 0, vy: 0, score: 0, dashing: false, dashEnd: 0, dashCooldownEnd: 0 };
-let opp = { x: 1000, y: 400, vx: 0, vy: 0, score: 0, dashing: false };
-
-let gems = []; // { x, y, id }
-let particles = [];
-let screenShake = { x: 0, y: 0, intensity: 0 };
-
-// Input
-let keys = {};
-let joystickDir = { x: 0, y: 0 };
-let isMobile = false;
-
-// ═══════════════════════════════════════════════
-// DOM REFS
-// ═══════════════════════════════════════════════
-const $ = id => document.getElementById(id);
-const lobbyEl = $('lobby');
-const gameUi = $('game-ui');
-const canvas = $('game-canvas');
-const ctx = canvas.getContext('2d');
-const hudScoreMe = $('hud-score-me');
-const hudScoreOpp = $('hud-score-opp');
-const hudNameMe = $('hud-name-me');
-const hudNameOpp = $('hud-name-opp');
-const winModal = $('win-modal');
-const winTitle = $('win-title');
-const winSub = $('win-subtitle');
-const disconnectBanner = $('disconnect-banner');
-
-// ═══════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════
-function genRoomCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random()*chars.length)];
-  return code;
-}
-
-function dist(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function roundRectCompat(ctx, x, y, w, h, r) {
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-  }
-}
-
-function spawnGem() {
-  return {
-    x: 60 + Math.random() * (ARENA_W - 120),
-    y: 60 + Math.random() * (ARENA_H - 120),
-    id: Math.random().toString(36).slice(2, 8),
-    pulse: Math.random() * Math.PI * 2
-  };
-}
-
-function initGems() {
-  gems = [];
-  for (let i = 0; i < MAX_GEMS; i++) gems.push(spawnGem());
-}
-
-function addParticles(x, y, color, count = 8) {
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 3 + 1;
-    particles.push({
-      x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
-      life: 1, decay: 0.02 + Math.random()*0.02,
-      r: Math.random()*4+2, color
-    });
-  }
-}
-
-function shakeScreen(intensity) {
-  screenShake.intensity = Math.max(screenShake.intensity, intensity);
-}
-
-// ═══════════════════════════════════════════════
-// LOBBY LOGIC
-// ═══════════════════════════════════════════════
-$('btn-create').onclick = createRoom;
-$('btn-join-toggle').onclick = () => {
-  const js = $('join-section');
-  js.style.display = js.style.display === 'none' ? 'block' : 'block';
-  $('btn-join-toggle').style.display = 'none';
-  $('join-code').focus();
-};
-$('btn-join').onclick = joinRoom;
-$('btn-play-again').onclick = () => location.reload();
-
-function setStatus(msg) { $('lobby-status').textContent = msg; }
-
-function createRoom() {
-  myName = $('player-name').value.trim() || 'Player 1';
-  isHost = true;
-  const roomCode = genRoomCode();
-
-  setStatus('Connecting…');
-  $('btn-create').disabled = true;
-
-  peer = new Peer('gemrush-' + roomCode, { debug: 0 });
-
-  peer.on('open', () => {
-    $('room-code-display').style.display = 'block';
-    $('room-code-text').textContent = roomCode;
-    $('host-status').textContent = 'Waiting for opponent…';
-    setStatus('');
-    $('btn-create').style.display = 'none';
-    $('or-divider')?.remove();
-    $('btn-join-toggle').style.display = 'none';
-    $('join-section').style.display = 'none';
-  });
-
-  peer.on('connection', (c) => {
-    conn = c;
-    setupConnection();
-  });
-
-  peer.on('error', (err) => {
-    if (err.type === 'unavailable-id') {
-      setStatus('Room code taken — try again');
-      $('btn-create').disabled = false;
-    } else {
-      setStatus('Error: ' + err.message);
-      $('btn-create').disabled = false;
-    }
-  });
-}
-
-function joinRoom() {
-  myName = $('player-name').value.trim() || 'Player 2';
-  const code = $('join-code').value.trim().toUpperCase();
-  if (!code) { setStatus('Enter a room code'); return; }
-
-  isHost = false;
-  setStatus('Connecting…');
-  $('btn-join').disabled = true;
-
-  peer = new Peer(undefined, { debug: 0 });
-
-  peer.on('open', () => {
-    conn = peer.connect('gemrush-' + code, { reliable: true });
-    setupConnection();
-  });
-
-  peer.on('error', (err) => {
-    setStatus('Could not connect: ' + err.message);
-    $('btn-join').disabled = false;
-  });
-}
-
-function setupConnection() {
-  conn.on('open', () => {
-    // Exchange names
-    conn.send({ type: 'hello', name: myName });
-
-    conn.on('data', onData);
-
-    conn.on('close', () => {
-      disconnectBanner.style.display = 'block';
-    });
-
-    // If host, wait for hello then start
-    if (!isHost) {
-      setStatus('Connected! Waiting for game to start…');
-    }
-  });
-
-  conn.on('error', (err) => {
-    setStatus('Connection error: ' + err.message);
-  });
-}
-
-// ═══════════════════════════════════════════════
-// NETWORK MESSAGES
-// ═══════════════════════════════════════════════
-function onData(data) {
-  switch (data.type) {
-    case 'hello':
-      oppName = data.name || 'Opponent';
-      if (isHost) {
-        // Host starts the game
-        initGems();
-        me = { x: 200, y: ARENA_H/2, vx: 0, vy: 0, score: 0, dashing: false, dashEnd: 0, dashCooldownEnd: 0 };
-        opp = { x: ARENA_W - 200, y: ARENA_H/2, vx: 0, vy: 0, score: 0, dashing: false, dashEnd: 0, dashCooldownEnd: 0 };
-        conn.send({ type: 'start', gems: gems, hostName: myName, guestName: oppName });
-        startGame();
-      }
-      break;
-
-    case 'start':
-      gems = data.gems;
-      oppName = data.hostName;
-      myName = $('player-name').value.trim() || 'Player 2';
-      me = { x: ARENA_W - 200, y: ARENA_H/2, vx: 0, vy: 0, score: 0, dashing: false, dashEnd: 0, dashCooldownEnd: 0 };
-      opp = { x: 200, y: ARENA_H/2, vx: 0, vy: 0, score: 0, dashing: false, dashEnd: 0, dashCooldownEnd: 0 };
-      startGame();
-      break;
-
-    case 'state':
-      // Received opponent's position/state
-      opp.x = data.x;
-      opp.y = data.y;
-      opp.vx = data.vx;
-      opp.vy = data.vy;
-      opp.score = data.score;
-      opp.dashing = data.dashing;
-      opp.dashEnd = data.dashEnd;
-      opp.dashCooldownEnd = data.dashCooldownEnd;
-      break;
-
-    case 'gem-collect':
-      // Opponent collected a gem
-      gems = gems.filter(g => g.id !== data.gemId);
-      addParticles(data.x, data.y, '#ffd666', 12);
-      opp.score = data.score;
-      // Host spawns replacement
-      if (isHost && gems.length < MAX_GEMS) {
-        const ng = spawnGem();
-        gems.push(ng);
-        conn.send({ type: 'gem-spawn', gem: ng });
-      }
-      break;
-
-    case 'gem-spawn':
-      gems.push(data.gem);
-      break;
-
-    case 'dash-hit':
-      // I got hit by opponent's dash — lose 1 gem
-      me.score = Math.max(0, me.score - 1);
-      opp.score = data.oppScore;
-      shakeScreen(8);
-      addParticles(me.x, me.y, '#ff4060', 15);
-      break;
-
-    case 'win':
-      endGame(false);
-      break;
-  }
-}
-
-function sendState() {
-  if (!conn || !conn.open) return;
-  conn.send({
-    type: 'state',
-    x: me.x, y: me.y,
-    vx: me.vx, vy: me.vy,
-    score: me.score,
-    dashing: me.dashing,
-    dashEnd: me.dashEnd,
-    dashCooldownEnd: me.dashCooldownEnd
-  });
-}
-
-// ═══════════════════════════════════════════════
-// GAME INIT & LOOP
-// ═══════════════════════════════════════════════
-function startGame() {
-  lobbyEl.style.display = 'none';
-  gameUi.style.display = 'block';
-  hudNameMe.textContent = myName;
-  hudNameOpp.textContent = oppName;
-
-  const myColor = isHost ? COLORS.host : COLORS.guest;
-  const oppColor = isHost ? COLORS.guest : COLORS.host;
-  $('hud-dot-me').style.background = myColor.body;
-  $('hud-dot-me').style.boxShadow = `0 0 8px ${myColor.body}`;
-  $('hud-dot-opp').style.background = oppColor.body;
-  $('hud-dot-opp').style.boxShadow = `0 0 8px ${oppColor.body}`;
-
-  resizeCanvas();
-  gameRunning = true;
-  lastTime = performance.now();
-  detectMobile();
-  gameLoop();
-  setInterval(sendState, SYNC_RATE);
-}
-
-function resizeCanvas() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-}
-addEventListener('resize', resizeCanvas);
-
-function gameLoop() {
-  if (!gameRunning) return;
-  const now = performance.now();
-  const dt = Math.min((now - lastTime) / 16.667, 3); // normalize to 60fps
-  lastTime = now;
-
-  update(dt, now);
-  render();
-  requestAnimationFrame(gameLoop);
-}
-
-// ═══════════════════════════════════════════════
-// UPDATE
-// ═══════════════════════════════════════════════
-function update(dt, now) {
-  // ── Input ──
-  let ix = 0, iy = 0;
-  if (keys['ArrowLeft'] || keys['KeyA']) ix -= 1;
-  if (keys['ArrowRight'] || keys['KeyD']) ix += 1;
-  if (keys['ArrowUp'] || keys['KeyW']) iy -= 1;
-  if (keys['ArrowDown'] || keys['KeyS']) iy += 1;
-
-  // Mobile joystick
-  if (isMobile && (joystickDir.x || joystickDir.y)) {
-    ix = joystickDir.x;
-    iy = joystickDir.y;
-  }
-
-  // Normalize diagonal
-  const mag = Math.hypot(ix, iy);
-  if (mag > 0) { ix /= mag; iy /= mag; }
-
-  // Dash
-  if (me.dashing && now > me.dashEnd) {
-    me.dashing = false;
-  }
-
-  const speed = me.dashing ? DASH_SPEED : PLAYER_SPEED;
-  me.vx = ix * speed;
-  me.vy = iy * speed;
-  me.x += me.vx * dt;
-  me.y += me.vy * dt;
-
-  // Clamp to arena
-  me.x = Math.max(PLAYER_RADIUS, Math.min(ARENA_W - PLAYER_RADIUS, me.x));
-  me.y = Math.max(PLAYER_RADIUS, Math.min(ARENA_H - PLAYER_RADIUS, me.y));
-
-  // Trail particles when moving
-  if (mag > 0 && Math.random() < 0.3) {
-    const col = isHost ? COLORS.host.trail : COLORS.guest.trail;
-    particles.push({
-      x: me.x + (Math.random()-0.5)*10,
-      y: me.y + (Math.random()-0.5)*10,
-      vx: -me.vx*0.1, vy: -me.vy*0.1,
-      life: 0.6, decay: 0.02, r: Math.random()*4+2, color: col
-    });
-  }
-
-  // ── Gem collection ──
-  for (let i = gems.length - 1; i >= 0; i--) {
-    const g = gems[i];
-    if (dist(me, g) < PLAYER_RADIUS + GEM_RADIUS) {
-      me.score++;
-      addParticles(g.x, g.y, '#ffd666', 12);
-      if (conn && conn.open) {
-        conn.send({ type: 'gem-collect', gemId: g.id, x: g.x, y: g.y, score: me.score });
-      }
-      gems.splice(i, 1);
-
-      // Host spawns replacement
-      if (isHost && gems.length < MAX_GEMS) {
-        const ng = spawnGem();
-        gems.push(ng);
-        if (conn && conn.open) {
-          conn.send({ type: 'gem-spawn', gem: ng });
-        }
-      }
-
-      // Check win
-      if (me.score >= WIN_SCORE) {
-        if (conn && conn.open) {
-          conn.send({ type: 'win' });
-        }
-        endGame(true);
-        return;
-      }
-    }
-  }
-
-  // ── Dash hit detection ──
-  if (me.dashing && dist(me, opp) < PLAYER_RADIUS * 2.2) {
-    // Steal a gem from opponent
-    opp.score = Math.max(0, opp.score - 1);
-    me.score++;
-    shakeScreen(10);
-    addParticles((me.x+opp.x)/2, (me.y+opp.y)/2, '#ff4060', 18);
-    if (conn && conn.open) {
-      conn.send({ type: 'dash-hit', oppScore: me.score });
-    }
-    me.dashing = false;
-
-    if (me.score >= WIN_SCORE) {
-      if (conn && conn.open) {
-        conn.send({ type: 'win' });
-      }
-      endGame(true);
-      return;
-    }
-  }
-
-  // ── Particles ──
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.life -= p.decay * dt;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-
-  // ── Screen shake decay ──
-  if (screenShake.intensity > 0) {
-    screenShake.x = (Math.random()-0.5) * screenShake.intensity;
-    screenShake.y = (Math.random()-0.5) * screenShake.intensity;
-    screenShake.intensity *= 0.88;
-    if (screenShake.intensity < 0.3) screenShake.intensity = 0;
-  }
-
-  // ── HUD ──
-  hudScoreMe.textContent = me.score;
-  hudScoreOpp.textContent = opp.score;
-}
-
-// ═══════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════
-function render() {
-  const W = canvas.width;
-  const H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  // Camera: center arena on screen
-  const scaleX = W / ARENA_W;
-  const scaleY = H / ARENA_H;
-  const scale = Math.min(scaleX, scaleY) * 0.92;
-  const offsetX = (W - ARENA_W * scale) / 2 + screenShake.x;
-  const offsetY = (H - ARENA_H * scale) / 2 + screenShake.y;
-
-  ctx.save();
-  ctx.translate(offsetX, offsetY);
-  ctx.scale(scale, scale);
-
-  // ── Arena background ──
-  ctx.fillStyle = '#0d1225';
-  ctx.beginPath();
-  roundRectCompat(ctx, 0, 0, ARENA_W, ARENA_H, 20);
-  ctx.fill();
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(100,140,255,0.05)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x <= ARENA_W; x += 60) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ARENA_H); ctx.stroke();
-  }
-  for (let y = 0; y <= ARENA_H; y += 60) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ARENA_W, y); ctx.stroke();
-  }
-
-  // Arena border
-  ctx.strokeStyle = 'rgba(100,140,255,0.15)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  roundRectCompat(ctx, 0, 0, ARENA_W, ARENA_H, 20);
-  ctx.stroke();
-
-  // Center line
-  ctx.strokeStyle = 'rgba(100,140,255,0.08)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([10, 10]);
-  ctx.beginPath(); ctx.moveTo(ARENA_W/2, 0); ctx.lineTo(ARENA_W/2, ARENA_H); ctx.stroke();
-  ctx.setLineDash([]);
-
-  // ── Particles ──
-  for (const p of particles) {
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // ── Gems ──
-  const t = performance.now() / 1000;
-  for (const g of gems) {
-    const pulse = 1 + Math.sin(t * 3 + (g.pulse || 0)) * 0.15;
-    const r = GEM_RADIUS * pulse;
-
-    // Glow
-    ctx.shadowColor = '#ffd666';
-    ctx.shadowBlur = 18;
-
-    // Diamond shape
-    ctx.fillStyle = '#ffd666';
-    ctx.beginPath();
-    ctx.moveTo(g.x, g.y - r * 1.3);
-    ctx.lineTo(g.x + r, g.y);
-    ctx.lineTo(g.x, g.y + r * 1.3);
-    ctx.lineTo(g.x - r, g.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner highlight
-    ctx.fillStyle = 'rgba(255,255,220,0.5)';
-    ctx.beginPath();
-    ctx.moveTo(g.x, g.y - r * 0.7);
-    ctx.lineTo(g.x + r*0.5, g.y);
-    ctx.lineTo(g.x, g.y + r * 0.3);
-    ctx.lineTo(g.x - r*0.5, g.y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-  }
-
-  // ── Draw players ──
-  drawPlayer(me, isHost ? COLORS.host : COLORS.guest, myName, true);
-  drawPlayer(opp, isHost ? COLORS.guest : COLORS.host, oppName, false);
-
-  ctx.restore();
-}
-
-function drawPlayer(p, colors, name, isMe) {
-  // Dash ring
-  if (p.dashing) {
-    ctx.strokeStyle = colors.body;
-    ctx.lineWidth = 3;
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, PLAYER_RADIUS + 8, 0, Math.PI*2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  // Glow
-  ctx.shadowColor = colors.body;
-  ctx.shadowBlur = 22;
-
-  // Body
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, PLAYER_RADIUS, 0, Math.PI*2);
-  ctx.fill();
-
-  // Inner highlight
-  const grad = ctx.createRadialGradient(p.x-4, p.y-6, 2, p.x, p.y, PLAYER_RADIUS);
-  grad.addColorStop(0, 'rgba(255,255,255,0.35)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, PLAYER_RADIUS, 0, Math.PI*2);
-  ctx.fill();
-
-  ctx.shadowBlur = 0;
-
-  // Name
-  ctx.fillStyle = '#fff';
-  ctx.font = '600 12px Outfit';
-  ctx.textAlign = 'center';
-  ctx.fillText(name, p.x, p.y - PLAYER_RADIUS - 8);
-
-  // Score badge
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
-  ctx.fill();
-  ctx.fillStyle = '#ffd666';
-  ctx.font = '700 11px Outfit';
-  ctx.fillText(p.score, p.x, p.y + 4);
-}
-
-// ═══════════════════════════════════════════════
-// END GAME
-// ═══════════════════════════════════════════════
-function endGame(iWon) {
-  gameRunning = false;
-  winTitle.textContent = iWon ? '🏆 You Win!' : '😢 You Lose!';
-  winTitle.style.color = iWon ? '#5cffb1' : '#ff6b8a';
-  winSub.textContent = iWon
-    ? `You collected ${WIN_SCORE} gems first!`
-    : `${oppName} collected ${WIN_SCORE} gems first.`;
-  winModal.classList.add('show');
-}
-
-// ═══════════════════════════════════════════════
-// INPUT — KEYBOARD
-// ═══════════════════════════════════════════════
-addEventListener('keydown', (e) => {
-  keys[e.code] = true;
-  // Dash on Space or Shift
-  if ((e.code === 'Space' || e.code === 'ShiftLeft') && gameRunning) {
-    triggerDash();
-  }
-});
-addEventListener('keyup', (e) => { keys[e.code] = false; });
-
-function triggerDash() {
-  const now = performance.now();
-  if (me.dashing || now < me.dashCooldownEnd) return;
-  if (me.vx === 0 && me.vy === 0) return; // Must be moving
-  me.dashing = true;
-  me.dashEnd = now + DASH_DURATION;
-  me.dashCooldownEnd = now + DASH_COOLDOWN;
-  shakeScreen(3);
-  const col = isHost ? COLORS.host.body : COLORS.guest.body;
-  addParticles(me.x, me.y, col, 10);
-}
-
-// ═══════════════════════════════════════════════
-// INPUT — MOBILE JOYSTICK
-// ═══════════════════════════════════════════════
-function detectMobile() {
-  isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if (isMobile) {
-    $('dash-btn').style.display = 'block';
-  }
-}
-
-(function initJoystick() {
-  const zone = $('joystick-zone');
-  const base = $('joy-base');
-  const stick = $('joy-stick');
-  let active = false;
-  let originX, originY;
-  const MAX_DIST = 50;
-
-  zone.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const t = e.touches[0];
-    originX = t.clientX;
-    originY = t.clientY;
-    base.style.display = 'block';
-    stick.style.display = 'block';
-    base.style.left = (originX - 60) + 'px';
-    base.style.top = (originY - 60) + 'px';
-    stick.style.left = (originX - 25) + 'px';
-    stick.style.top = (originY - 25) + 'px';
-    active = true;
-  }, { passive: false });
-
-  zone.addEventListener('touchmove', (e) => {
-    if (!active) return;
-    e.preventDefault();
-    const t = e.touches[0];
-    let dx = t.clientX - originX;
-    let dy = t.clientY - originY;
-    const d = Math.hypot(dx, dy);
-    if (d > MAX_DIST) { dx = dx/d*MAX_DIST; dy = dy/d*MAX_DIST; }
-    stick.style.left = (originX + dx - 25) + 'px';
-    stick.style.top = (originY + dy - 25) + 'px';
-    joystickDir.x = dx / MAX_DIST;
-    joystickDir.y = dy / MAX_DIST;
-  }, { passive: false });
-
-  zone.addEventListener('touchend', () => {
-    active = false;
-    base.style.display = 'none';
-    stick.style.display = 'none';
-    joystickDir.x = 0;
-    joystickDir.y = 0;
-  });
-
-  $('dash-btn').addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    triggerDash();
-  }, { passive: false });
-})();
-
-</script>
-</body>
-</html>
+    <div class="disconnect-bar" id="disconnect-bar">⚠️ Opponent disconnected</div>
+
+    <script>
+        // ═══════════════════════════════════════════════════
+        // DICTIONARY — Kazakh ↔ English
+        // ═══════════════════════════════════════════════════
+        const DICT = {
+            words: [
+                // Animals
+                { kz: 'мысық', en: 'cat' },
+                { kz: 'ит', en: 'dog' },
+                { kz: 'жылқы', en: 'horse' },
+                { kz: 'түйе', en: 'camel' },
+                { kz: 'қой', en: 'sheep' },
+                { kz: 'бүркіт', en: 'eagle' },
+                { kz: 'түлкі', en: 'fox' },
+                { kz: 'аю', en: 'bear' },
+                { kz: 'қасқыр', en: 'wolf' },
+                { kz: 'тауық', en: 'chicken' },
+                { kz: 'балық', en: 'fish' },
+                { kz: 'құс', en: 'bird' },
+                { kz: 'жылан', en: 'snake' },
+                { kz: 'сиыр', en: 'cow' },
+                { kz: 'ешкі', en: 'goat' },
+
+                // Nature
+                { kz: 'күн', en: 'sun' },
+                { kz: 'ай', en: 'moon' },
+                { kz: 'жұлдыз', en: 'star' },
+                { kz: 'тау', en: 'mountain' },
+                { kz: 'өзен', en: 'river' },
+                { kz: 'көл', en: 'lake' },
+                { kz: 'теңіз', en: 'sea' },
+                { kz: 'орман', en: 'forest' },
+                { kz: 'дала', en: 'steppe' },
+                { kz: 'жаңбыр', en: 'rain' },
+                { kz: 'қар', en: 'snow' },
+                { kz: 'жел', en: 'wind' },
+                { kz: 'аспан', en: 'sky' },
+                { kz: 'жер', en: 'earth' },
+                { kz: 'от', en: 'fire' },
+                { kz: 'су', en: 'water' },
+                { kz: 'гүл', en: 'flower' },
+                { kz: 'ағаш', en: 'tree' },
+                { kz: 'тас', en: 'stone' },
+
+                // Family
+                { kz: 'ана', en: 'mother' },
+                { kz: 'әке', en: 'father' },
+                { kz: 'бала', en: 'child' },
+                { kz: 'ұл', en: 'son' },
+                { kz: 'қыз', en: 'daughter' },
+                { kz: 'аға', en: 'brother' },
+                { kz: 'әже', en: 'grandmother' },
+                { kz: 'ата', en: 'grandfather' },
+                { kz: 'дос', en: 'friend' },
+                { kz: 'адам', en: 'person' },
+
+                // Food
+                { kz: 'нан', en: 'bread' },
+                { kz: 'ет', en: 'meat' },
+                { kz: 'сүт', en: 'milk' },
+                { kz: 'алма', en: 'apple' },
+                { kz: 'тұз', en: 'salt' },
+                { kz: 'шай', en: 'tea' },
+
+                // Colors
+                { kz: 'қызыл', en: 'red' },
+                { kz: 'көк', en: 'blue' },
+                { kz: 'жасыл', en: 'green' },
+                { kz: 'ақ', en: 'white' },
+                { kz: 'қара', en: 'black' },
+                { kz: 'сары', en: 'yellow' },
+
+                // Body
+                { kz: 'бас', en: 'head' },
+                { kz: 'көз', en: 'eye' },
+                { kz: 'жүрек', en: 'heart' },
+                { kz: 'қол', en: 'hand' },
+                { kz: 'аяқ', en: 'foot' },
+
+                // Abstract / Other
+                { kz: 'кітап', en: 'book' },
+                { kz: 'үй', en: 'house' },
+                { kz: 'жол', en: 'road' },
+                { kz: 'уақыт', en: 'time' },
+                { kz: 'тіл', en: 'language' },
+                { kz: 'күш', en: 'power' },
+                { kz: 'бақыт', en: 'happiness' },
+                { kz: 'махаббат', en: 'love' },
+                { kz: 'ел', en: 'country' },
+                { kz: 'білім', en: 'knowledge' },
+                { kz: 'жұмыс', en: 'work' },
+                { kz: 'мектеп', en: 'school' },
+            ],
+
+            phrases: [
+                { kz: 'сәлеметсіз бе', en: 'hello' },
+                { kz: 'рақмет', en: 'thank you' },
+                { kz: 'кешіріңіз', en: 'excuse me' },
+                { kz: 'қалыңыз қалай', en: 'how are you' },
+                { kz: 'жақсы', en: 'good' },
+                { kz: 'иә', en: 'yes' },
+                { kz: 'жоқ', en: 'no' },
+                { kz: 'сау болыңыз', en: 'goodbye' },
+                { kz: 'менің атым', en: 'my name is' },
+                { kz: 'қайырлы таң', en: 'good morning' },
+                { kz: 'қайырлы кеш', en: 'good evening' },
+                { kz: 'тамаша', en: 'wonderful' },
+                { kz: 'көмектесіңізші', en: 'please help' },
+                { kz: 'мен түсінбедім', en: 'i did not understand' },
+                { kz: 'қанша тұрады', en: 'how much does it cost' },
+            ],
+
+            proverbs: [
+                { kz: 'Отан — елдің анасы', en: 'homeland is the mother of the nation' },
+                { kz: 'Білім — бағалы қазына', en: 'knowledge is a precious treasure' },
+                { kz: 'Тіл — достықтың кілті', en: 'language is the key to friendship' },
+                { kz: 'Еңбек етсең — ерінбей, тояды қарның тіленбей', en: 'if you work hard you will eat without begging' },
+                { kz: 'Ағаш тамырымен мықты', en: 'a tree is strong by its roots' },
+                { kz: 'Дос — басқа бір жан', en: 'a friend is another soul' },
+                { kz: 'Сабыр түбі — сары алтын', en: 'patience is golden' },
+                { kz: 'Ер — елінде, гүл — жерінде', en: 'a hero is in his homeland a flower in its soil' },
+                { kz: 'Жігіттің бағасын жігіт біледі', en: 'only a brave man knows the value of a brave man' },
+                { kz: 'Бірлік бар жерде — тірлік бар', en: 'where there is unity there is life' },
+                { kz: 'Ас — адамның арқауы', en: 'food is the basis of humans' },
+                { kz: 'Ана сүті — бал', en: 'mothers milk is honey' },
+            ]
+        };
+
+        // Flatten all entries with type tags
+        const ALL_ITEMS = [
+            ...DICT.words.map(w => ({ ...w, type: 'word' })),
+            ...DICT.phrases.map(p => ({ ...p, type: 'phrase' })),
+            ...DICT.proverbs.map(p => ({ ...p, type: 'proverb' }))
+        ];
+
+        // ═══════════════════════════════════════════════════
+        // GAME CONFIG
+        // ═══════════════════════════════════════════════════
+        const SPEED_DURATION = 90; // seconds
+        const ROUND_COUNT = 10;
+        const ROUND_TIME = 15; // seconds per round
+
+        // ═══════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════
+        let isHost = false;
+        let peer = null;
+        let conn = null;
+        let myName = 'Player';
+        let oppName = 'Opponent';
+        let gameMode = 'speed'; // 'speed' | 'rounds'
